@@ -1,5 +1,7 @@
 const Timestamp = new Date().getTime();
 module.exports = {
+    publicPath: process.env.NODE_ENV === 'production' ? '/YOUR_REPO_NAME/' : '/',
+
     configureWebpack:{
         output: {
             // 输出重构【模块名称.hash值.时间戳】
@@ -9,8 +11,8 @@ module.exports = {
     },
     devServer: {
         open: true, //是否自动弹出浏览器页面
-        // host: "localhost",
-        // port: '8080',
+        host: "localhost",
+        port: '8080',
         https: false,
         hotOnly: false,
         proxy: {
