@@ -1,0 +1,207 @@
+<template>
+  <div>
+    <template>{{ textValue }}</template>
+    <div></div>
+    <template>{{ textValue1 }}</template>
+    <div></div>
+    <el-button @click="claimFunction">{{ claim }}</el-button>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import Web3 from 'web3';
+
+let web3;
+const abi = [
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token_",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "merkleRoot_",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "merkleRoot",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "token",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "isClaimed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "merkleProof",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
+
+const disTributorAddress = '0xAE1FB3c194c4311f364143093BdE710Bd3f0acEc';
+let disTributor;
+
+export default {
+  data() {
+    return {
+      claim: "claim",
+      textValue: '当前地址：',
+      textValue1: '当前chainId:',
+      address: undefined,
+      index: undefined,
+      amount: undefined,
+      proof: undefined,
+    }
+  },
+  async mounted() {
+    // import http from '@/request/api.js'
+    if (typeof window.ethereum !== 'undefined') {
+      console.log('MetaMask is installed!');
+    }
+
+    web3 = new Web3(window.ethereum);
+    disTributor = new web3.eth.Contract(abi, disTributorAddress);
+
+    let accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+    let account = accounts[0];
+    this.textValue = '当前地址：' + account;
+    console.log('balance: ' + await web3.eth.getBalance(account))
+
+    window.ethereum.on('accountsChanged', (accounts) => {
+      if (accounts.length > 0) {
+        account = accounts[0];
+        this.textValue = '当前地址：' + account;
+      }
+    });
+
+    let chianId = await ethereum.request({method: 'eth_chainId'});
+    if (chianId === 256) {
+      this.textValue1 = '当前chainId:' + chianId;
+    } else {
+      this.textValue1 = '当前chainId:' + chianId + " network error";
+    }
+
+    window.ethereum.on('chainChanged', async (chainId) => {
+      window.location.reload();
+      if (chainId === 256) {
+        this.textValue1 = '当前chainId:' + chainId;
+      } else {
+        this.textValue1 = '当前chainId:' + chainId + " network error";
+      }
+    });
+  },
+  methods: {
+    async claimFunction() {
+      axios.get('/api/leaf?address=' + "0x03819659aFAbf39AdF26A84D4B94922Bf0CF6eD4").then(async res => {
+        console.log(res.data.data);
+        if (res.data.code === 1) {
+          res = res.data.data
+          console.log(res)
+          await disTributor.methods.claim(res.user_index, res.address, res.amount, JSON.parse(res.proof)).send({from: window.ethereum.selectedAddress})
+          alert('领取成功');
+        } else {
+          alert('没有');
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style>
+</style>
