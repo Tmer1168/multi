@@ -7,5 +7,6 @@
  * @FilePath: \my_foods_waterfull\vue.config.js
  */
 module.exports = {
-  publicPath: "/multi/"
+    publicPath: "/multi/",
+    lintOnSave: false
 };

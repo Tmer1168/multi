@@ -79,12 +79,13 @@
 </template>
 
 <script>
-import axios from 'axios';
+import {Component, Vue} from "vue-property-decorator";
 
 const yfxToken = '41528d4f67c7055152052058cd9646c8e2cbfe729e';
 const owner_address = '41384da1b1e9d08842d523872b4d42f62c0d97c74f';
 
-export default {
+@Component
+export default class Index extends Vue {
   data() {
     return {
       multiAddressList: '多签地址成员列表：',
@@ -114,7 +115,8 @@ export default {
 
       editAddress: '修改权限',
     }
-  },
+  };
+
   async mounted() {
     // import http from '@/request/api.js'
     if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
@@ -140,175 +142,176 @@ export default {
     }
 
     this.multiTextInput6 = accountdata.owner_permission.threshold
-  },
+  };
 
-  methods: {
-    async mintFunction() {
-      if (!window.tronWeb && !window.tronWeb.defaultAddress.base58) {
-        alert('未连接钱包')
-        return;
-      }
-      this.multiTextInput10 = '';
 
-      if (this.multiTextInput9 === undefined || this.multiTextInput9 === '') {
-        let functionSelector = 'mint(address,uint256)';
-        let parameters = [{type: 'address', value: this.input1}, {type: 'uint', value: this.input2}];
-        let options = {};
-        let transaction = await window.tronWeb.transactionBuilder.triggerSmartContract(
-            yfxToken,
-            functionSelector,
-            options,
-            parameters,
-            window.tronWeb.defaultAddress.base58
-        );
-        console.log(transaction.transaction);
+  async mintFunction() {
+    if (!window.tronWeb && !window.tronWeb.defaultAddress.base58) {
+      alert('未连接钱包')
+      return;
+    }
+    this.multiTextInput10 = '';
+    let accountdata = await window.tronWeb.trx.getAccount(owner_address)
 
-        let signedTransaction = await window.tronWeb.trx.multiSign(transaction, 0);
+    if (this.multiTextInput9 === undefined || this.multiTextInput9 === '') {
+      let functionSelector = 'mint(address,uint256)';
+      let parameters = [{type: 'address', value: this.input1}, {type: 'uint', value: this.input2}];
+      let options = {};
+      let transaction = await window.tronWeb.transactionBuilder.triggerSmartContract(
+          yfxToken,
+          functionSelector,
+          options,
+          parameters,
+          window.tronWeb.defaultAddress.base58
+      );
+      console.log(transaction.transaction);
 
-        let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
-        if (weightData.current_weight >= accountdata.owner_permission.threshold) {
-          const result = await window.tronWeb.trx.broadcast(signedTransaction);
-          console.log(result);
-        } else {
-          console.log(JSON.stringify(signedTransaction));
-        }
-      }else {
-        let signedTransaction = await window.tronWeb.trx.multiSign(transaction, 0);
+      let signedTransaction = await window.tronWeb.trx.multiSign(transaction, 0);
 
-        let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
-        if (weightData.current_weight >= accountdata.owner_permission.threshold) {
-          const result = await window.tronWeb.trx.broadcast(signedTransaction);
-          console.log(result);
-        } else {
-          this.multiTextInput10 = JSON.stringify(signedTransaction)
-        }
-      }
-    },
-
-    async editFunction() {
-      this.multiTextInput8 = '';
-      console.log("multiTextInput8: " + this.multiTextInput8);
-      console.log('default address: ' + window.tronWeb.defaultAddress.base58)
-      if (!window.tronWeb && !window.tronWeb.defaultAddress.base58) {
-        alert('未连接钱包')
-        return;
-      }
-      let accountdata = await window.tronWeb.trx.getAccount(owner_address)
-
-      if (this.multiTextInput7 === undefined || this.multiTextInput7 === '') {
-        if (this.multiTextInput6 === undefined || this.multiTextInput6 === '') {
-          alert('请输入参数')
-          return;
-        }
-
-        if (this.multiTextInput1 === undefined || this.multiTextInput1 === '') {
-          alert('请输入参数')
-          return;
-        }
-
-        let ownerArr = [];
-        let activesArr = [];
-        let threshold = this.multiTextInput6;
-        let jsonData = {
-          "owner_address": owner_address,
-          "owner": {
-            "type": 0,
-            "id": 0,
-            "permission_name": "owner",
-            "threshold": Number.parseInt(threshold),
-            "keys": ownerArr
-          },
-          "actives": [{
-            "type": 2,
-            "id": 2,
-            "permission_name": "active0",
-            "threshold": Number.parseInt(threshold),
-            "operations": "7fff1fc0037e0000000000000000000000000000000000000000000000000000",
-            "keys": activesArr
-          }]
-        };
-
-        if (this.multiTextInput1 !== undefined && this.multiTextInput1 !== '') {
-          let option = {
-            address: window.tronWeb.address.toHex(this.multiTextInput1),
-            weight: 1
-          }
-          ownerArr.push(option);
-          activesArr.push(option);
-        }
-        if (this.multiTextInput2 !== undefined && this.multiTextInput2 !== '') {
-          let option = {
-            address: window.tronWeb.address.toHex(this.multiTextInput2),
-            weight: 1
-          }
-          ownerArr.push(option);
-          activesArr.push(option);
-        }
-        if (this.multiTextInput3 !== undefined && this.multiTextInput3 !== '') {
-          let option = {
-            address: window.tronWeb.address.toHex(this.multiTextInput3),
-            weight: 1
-          }
-          ownerArr.push(option);
-          activesArr.push(option);
-        }
-        if (this.multiTextInput4 !== undefined && this.multiTextInput4 !== '') {
-          let option = {
-            address: window.tronWeb.address.toHex(this.multiTextInput4),
-            weight: 1
-          }
-          ownerArr.push(option);
-          activesArr.push(option);
-        }
-        if (this.multiTextInput5 !== undefined && this.multiTextInput5 !== '') {
-          let option = {
-            address: window.tronWeb.address.toHex(this.multiTextInput5),
-            weight: 1
-          }
-          ownerArr.push(option);
-          activesArr.push(option);
-        }
-
-        console.log('transaction1:   ' + JSON.stringify(jsonData))
-
-        const url = 'https://api.shasta.trongrid.io/wallet/accountpermissionupdate';
-        const options = {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(jsonData)
-        };
-        console.log(1111)
-        fetch(url, options)
-            .then(res => res.json())
-            .then(async function (json) {
-              console.log('transaction2:   ' + JSON.stringify(json))
-              let signedTransaction = await window.tronWeb.trx.multiSign(json, 0);
-
-              let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
-              if (weightData.current_weight >= accountdata.owner_permission.threshold) {
-                const result = await window.tronWeb.trx.broadcast(signedTransaction);
-                console.log(result);
-              } else {
-                console.log(JSON.stringify(signedTransaction));
-              }
-            })
-            .catch(err => console.error('error:' + err));
+      let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
+      if (weightData.current_weight >= accountdata.owner_permission.threshold) {
+        const result = await window.tronWeb.trx.broadcast(signedTransaction);
+        console.log(result);
       } else {
-        console.log('transaction3:   ' + this.multiTextInput7)
-        let signedTransaction = await window.tronWeb.trx.multiSign(JSON.parse(this.multiTextInput7), 0);
+        console.log(JSON.stringify(signedTransaction));
+      }
+    } else {
+      let signedTransaction = await window.tronWeb.trx.multiSign(transaction, 0);
 
-        let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
-        if (weightData.current_weight >= accountdata.owner_permission.threshold) {
-          const result = await window.tronWeb.trx.broadcast(signedTransaction);
-          console.log(result);
-        } else {
-          this.multiTextInput8 = JSON.stringify(signedTransaction);
+      let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
+      if (weightData.current_weight >= accountdata.owner_permission.threshold) {
+        const result = await window.tronWeb.trx.broadcast(signedTransaction);
+        console.log(result);
+      } else {
+        this.multiTextInput10 = JSON.stringify(signedTransaction)
+      }
+    }
+  };
+
+  async editFunction() {
+    this.multiTextInput8 = '';
+    console.log("multiTextInput8: " + this.multiTextInput8);
+    console.log('default address: ' + window.tronWeb.defaultAddress.base58)
+    if (!window.tronWeb && !window.tronWeb.defaultAddress.base58) {
+      alert('未连接钱包')
+      return;
+    }
+    let accountdata = await window.tronWeb.trx.getAccount(owner_address)
+
+    if (this.multiTextInput7 === undefined || this.multiTextInput7 === '') {
+      if (this.multiTextInput6 === undefined || this.multiTextInput6 === '') {
+        alert('请输入参数')
+        return;
+      }
+
+      if (this.multiTextInput1 === undefined || this.multiTextInput1 === '') {
+        alert('请输入参数')
+        return;
+      }
+
+      let ownerArr = [];
+      let activesArr = [];
+      let threshold = this.multiTextInput6;
+      let jsonData = {
+        "owner_address": owner_address,
+        "owner": {
+          "type": 0,
+          "id": 0,
+          "permission_name": "owner",
+          "threshold": Number.parseInt(threshold),
+          "keys": ownerArr
+        },
+        "actives": [{
+          "type": 2,
+          "id": 2,
+          "permission_name": "active0",
+          "threshold": Number.parseInt(threshold),
+          "operations": "7fff1fc0037e0000000000000000000000000000000000000000000000000000",
+          "keys": activesArr
+        }]
+      };
+
+      if (this.multiTextInput1 !== undefined && this.multiTextInput1 !== '') {
+        let option = {
+          address: window.tronWeb.address.toHex(this.multiTextInput1),
+          weight: 1
         }
+        ownerArr.push(option);
+        activesArr.push(option);
+      }
+      if (this.multiTextInput2 !== undefined && this.multiTextInput2 !== '') {
+        let option = {
+          address: window.tronWeb.address.toHex(this.multiTextInput2),
+          weight: 1
+        }
+        ownerArr.push(option);
+        activesArr.push(option);
+      }
+      if (this.multiTextInput3 !== undefined && this.multiTextInput3 !== '') {
+        let option = {
+          address: window.tronWeb.address.toHex(this.multiTextInput3),
+          weight: 1
+        }
+        ownerArr.push(option);
+        activesArr.push(option);
+      }
+      if (this.multiTextInput4 !== undefined && this.multiTextInput4 !== '') {
+        let option = {
+          address: window.tronWeb.address.toHex(this.multiTextInput4),
+          weight: 1
+        }
+        ownerArr.push(option);
+        activesArr.push(option);
+      }
+      if (this.multiTextInput5 !== undefined && this.multiTextInput5 !== '') {
+        let option = {
+          address: window.tronWeb.address.toHex(this.multiTextInput5),
+          weight: 1
+        }
+        ownerArr.push(option);
+        activesArr.push(option);
+      }
+
+      console.log('transaction1:   ' + JSON.stringify(jsonData))
+
+      const url = 'https://api.shasta.trongrid.io/wallet/accountpermissionupdate';
+      const options = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(jsonData)
+      };
+      console.log(1111)
+      fetch(url, options)
+          .then(res => res.json())
+          .then(async function (json) {
+            console.log('transaction2:   ' + JSON.stringify(json))
+            let signedTransaction = await window.tronWeb.trx.multiSign(json, 0);
+
+            let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
+            if (weightData.current_weight >= accountdata.owner_permission.threshold) {
+              const result = await window.tronWeb.trx.broadcast(signedTransaction);
+              console.log(result);
+            } else {
+              console.log(JSON.stringify(signedTransaction));
+            }
+          })
+          .catch(err => console.error('error:' + err));
+    } else {
+      console.log('transaction3:   ' + this.multiTextInput7)
+      let signedTransaction = await window.tronWeb.trx.multiSign(JSON.parse(this.multiTextInput7), 0);
+
+      let weightData = await window.tronWeb.trx.getSignWeight(signedTransaction, 0);
+      if (weightData.current_weight >= accountdata.owner_permission.threshold) {
+        const result = await window.tronWeb.trx.broadcast(signedTransaction);
+        console.log(result);
+      } else {
+        this.multiTextInput8 = JSON.stringify(signedTransaction);
       }
     }
   }
 }
 </script>
 
+<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 </style>
